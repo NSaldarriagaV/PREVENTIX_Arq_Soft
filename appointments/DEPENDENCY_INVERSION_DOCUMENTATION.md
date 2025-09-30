@@ -1,10 +1,10 @@
 # Inversión de Dependencias - Sistema de Recomendaciones
 
-## 📋 Resumen
+##  Resumen
 
 Este documento describe la implementación del **Principio de Inversión de Dependencias (DIP)** en el sistema de recomendaciones de citas médicas del proyecto PREVENTIX.
 
-## 🎯 Objetivo
+##  Objetivo
 
 Refactorizar el sistema de recomendaciones para:
 - **Reducir el acoplamiento** entre las vistas y las implementaciones específicas de ML
@@ -12,9 +12,9 @@ Refactorizar el sistema de recomendaciones para:
 - **Permitir el intercambio** de algoritmos de recomendación sin modificar el código cliente
 - **Mejorar la mantenibilidad** y extensibilidad del sistema
 
-## 🏗️ Arquitectura Antes vs Después
+##  Arquitectura Antes vs Después
 
-### ❌ **ANTES (Alto Acoplamiento)**
+###  **ANTES (Alto Acoplamiento)**
 ```python
 # appointments/views.py
 from .ml_model import recommend_appointments  # Dependencia directa
@@ -23,7 +23,7 @@ def appointment_recommendations(request):
     recommendations = recommend_appointments(user_id)  # Acoplamiento fuerte
 ```
 
-### ✅ **DESPUÉS (Bajo Acoplamiento)**
+###  **DESPUÉS (Bajo Acoplamiento)**
 ```python
 # appointments/views.py
 from .recommendation_factory import get_recommendation_service  # Dependencia de abstracción
@@ -33,19 +33,19 @@ def appointment_recommendations(request):
     recommendations = service.get_recommendations(user_id)  # Uso de interfaz
 ```
 
-## 📁 Estructura de Archivos
+##  Estructura de Archivos
 
 ```
 appointments/
-├── recommendation_interface.py          # 🎯 Interfaz abstracta
-├── knn_recommendation_service.py       # 🔧 Implementación KNN
-├── mock_recommendation_service.py      # 🧪 Implementación Mock
-├── recommendation_factory.py            # 🏭 Factory + DI Container
-├── test_recommendation_service.py      # ✅ Tests
-└── DEPENDENCY_INVERSION_DOCUMENTATION.md # 📚 Documentación
+├── recommendation_interface.py          #  Interfaz abstracta
+├── knn_recommendation_service.py       #  Implementación KNN
+├── mock_recommendation_service.py      #  Implementación Mock
+├── recommendation_factory.py            #  Factory + DI Container
+├── test_recommendation_service.py      #  Tests
+└── DEPENDENCY_INVERSION_DOCUMENTATION.md #  Documentación
 ```
 
-## 🔧 Componentes Implementados
+##  Componentes Implementados
 
 ### 1. **Interfaz Abstracta** (`recommendation_interface.py`)
 ```python
@@ -104,7 +104,7 @@ def appointment_recommendations(request):
     recommendations = service.get_recommendations(user_id)
 ```
 
-## 🧪 Testing
+##  Testing
 
 ### Ejecutar Tests
 ```bash
@@ -118,7 +118,7 @@ python manage.py test appointments.test_recommendation_service
 - ✅ Tests de inyección de dependencias
 - ✅ Tests específicos de MockRecommendationService
 
-## 🚀 Beneficios Obtenidos
+##  Beneficios Obtenidos
 
 ### 1. **Flexibilidad**
 - Cambiar algoritmo: Solo modificar `RECOMMENDATION_SERVICE_TYPE`
@@ -137,7 +137,7 @@ python manage.py test appointments.test_recommendation_service
 - Configuración centralizada en settings
 - Diferentes servicios para diferentes entornos
 
-## 📈 Ejemplos de Uso
+##  Ejemplos de Uso
 
 ### Cambiar a Mock para Testing
 ```python
@@ -166,7 +166,7 @@ RecommendationServiceFactory.register_service('collaborative', CollaborativeFilt
 RECOMMENDATION_SERVICE_TYPE = 'collaborative'
 ```
 
-## 🔄 Comandos de Management
+##  Comandos de Management
 
 ### Entrenar Modelo
 ```bash
@@ -187,7 +187,7 @@ python manage.py train_model --service knn
 | **Extensibilidad** | Difícil (modificar código) | Fácil (nueva implementación) |
 | **Configurabilidad** | Ninguna | Alta (settings + factory) |
 
-## 🎯 Principios SOLID Aplicados
+##  Principios SOLID Aplicados
 
 - ✅ **S** - Single Responsibility: Cada clase tiene una responsabilidad
 - ✅ **O** - Open/Closed: Abierto para extensión, cerrado para modificación
@@ -195,7 +195,7 @@ python manage.py train_model --service knn
 - ✅ **I** - Interface Segregation: Interfaz específica y cohesiva
 - ✅ **D** - Dependency Inversion: Dependencias de abstracciones, no concreciones
 
-## 🚀 Próximos Pasos
+##  Próximos Pasos
 
 1. **Implementar más algoritmos**: Collaborative Filtering, Content-Based
 2. **A/B Testing**: Comparar rendimiento de diferentes algoritmos
@@ -205,6 +205,6 @@ python manage.py train_model --service knn
 
 ---
 
-**Fecha de implementación**: Febrero 2025  
-**Autor**: Juan Esteban Romero  
+**Fecha de implementación**: Septiembre 2025  
+**Autor**: Juan Esteban Alzate
 **Rama**: juanes
