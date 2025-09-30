@@ -4,7 +4,7 @@ from .models import Appointment
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
 from datetime import date
-from .ml_model import recommend_appointments
+from .recommendation_factory import get_recommendation_service
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
@@ -144,8 +144,11 @@ def delete_appointment(request, appointment_id):
 def appointment_recommendations(request):
     user_id = request.user.id
 
+    # Obtener el servicio de recomendación usando inyección de dependencias
+    recommendation_service = get_recommendation_service()
+    
     # Obtener las citas recomendadas para el usuario
-    recommended_appointments = recommend_appointments(user_id)
+    recommended_appointments = recommendation_service.get_recommendations(user_id)
 
     # Mostrar recomendaciones en el template
     return render(request, 'appointments/recommendations.html', {
