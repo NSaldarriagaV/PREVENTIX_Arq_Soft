@@ -9,6 +9,7 @@ from .forms import AppointmentForm
 import json
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import Count
+from appointments.services.specialties import get_specialty_choices_for_user
 
 ALL_SPECIALTIES = [
     'Odontología', 'Vacunación', 'Chequeo general', 'Dermatología', 'Oftalmología',

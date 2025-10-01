@@ -43,23 +43,27 @@ class Appointment(models.Model):
         ).exists()
 
     def clean(self):
-        # 1) Fecha en el pasado
+        errors = {}
+
+        if not self.date:
+            errors['date'] = "Date is required."
+        if not self.time:
+            errors['time'] = "Time is required."
+        if not self.doctor_name or not self.doctor_name.strip():
+            errors['doctor_name'] = "Doctor name is required."
+        if not self.address or not self.address.strip():
+            errors['address'] = "Address is required."
+
+        if errors:
+            raise ValidationError(errors)
+
         today = timezone.localdate()
         if self.date < today:
-            raise ValidationError({"date": "The appointment date cannot be in the past."})
+            raise ValidationError({'date': 'The appointment date cannot be in the past.'})
 
-        # 2) Solapamiento
-        if self.user_id and self.date and self.time and self.is_overlapping():
-            raise ValidationError({
-                "time": "You already have an appointment at this date and time."
-            })
-
-        # 3) Validaciones opcionales (dirección/doctor)
-        if not self.doctor_name.strip():
-            raise ValidationError({"doctor_name": "Doctor name is required."})
-        if not self.address.strip():
-            raise ValidationError({"address": "Address is required."})
-
+        # Solapamiento: usuario con misma fecha+hora
+        if self.user_id and self.is_overlapping():
+            raise ValidationError({'time': 'You already have an appointment at this date and time.'})
     def save(self, *args, **kwargs):
         # Garantiza que siempre se valide al guardar
         self.full_clean()
@@ -79,25 +83,3 @@ class Appointment(models.Model):
         ]
         ordering = ["date", "time"]
 
-    def clean(self):
-        errors = {}
-
-        if not self.date:
-            errors['date'] = "Date is required."
-        if not self.time:
-            errors['time'] = "Time is required."
-        if not self.doctor_name or not self.doctor_name.strip():
-            errors['doctor_name'] = "Doctor name is required."
-        if not self.address or not self.address.strip():
-            errors['address'] = "Address is required."
-
-        if errors:
-         
-            raise ValidationError(errors)
-        
-        today = timezone.localdate()
-        if self.date < today:
-            raise ValidationError({'date': 'The appointment date cannot be in the past.'})
-
-        if self.user_id and self.is_overlapping():
-            raise ValidationError({'time': 'You already have an appointment at this date and time.'})   
