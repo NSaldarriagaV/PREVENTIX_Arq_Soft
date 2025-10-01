@@ -1,162 +1,25 @@
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import AppointmentForm
-from .models import Appointment
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
-from datetime import date
-from .recommendation_factory import get_recommendation_service
+from django.utils import timezone
+from datetime import datetime
+from .models import Appointment
+from .forms import AppointmentForm
 import json
 from django.core.serializers.json import DjangoJSONEncoder
-from datetime import datetime
+from django.db.models import Count
 
-# Lista solo las citas del usuario autenticado
+ALL_SPECIALTIES = [
+    'Odontología', 'Vacunación', 'Chequeo general', 'Dermatología', 'Oftalmología',
+    'Cardiología', 'Ginecología', 'Urología', 'Pediatría', 'Otorrinolaringología',
+    'Medicina interna', 'Endocrinología', 'Nutrición', 'Psicología', 'Psiquiatría',
+    'Neumología', 'Fisioterapia', 'Rehabilitación', 'Neurología', 'Revisión postoperatoria',
+    'Análisis de laboratorio', 'Control de peso', 'Revisión de medicamentos',
+    'Consulta virtual', 'Medicina del deporte'
+]
 
-@login_required
-def appointment_list(request):
-    today = date.today()
-
-    upcoming_appointments = Appointment.objects.filter(
-        user=request.user,
-        date__gte=today
-    ).order_by('date', 'time')
-
-    past_appointments = Appointment.objects.filter(
-        user=request.user,
-        date__lt=today
-    ).order_by('-date', '-time')  # Más recientes primero en las pasadas
-
-    return render(request, 'appointments/list.html', {
-        'upcoming_appointments': upcoming_appointments,
-        'past_appointments': past_appointments
-    })
-
-# Edita solo citas del usuario autenticado
-@login_required
-def edit_appointment(request, appointment_id):
-    appointment = get_object_or_404(Appointment, pk=appointment_id, user=request.user)
-
-    # Lista completa de especialidades posibles
-    all_specialties = [
-        'Odontología', 'Vacunación', 'Chequeo general', 'Dermatología', 'Oftalmología',
-        'Cardiología', 'Ginecología', 'Urología', 'Pediatría', 'Otorrinolaringología',
-        'Medicina interna', 'Endocrinología', 'Nutrición', 'Psicología', 'Psiquiatría',
-        'Neumología', 'Fisioterapia', 'Rehabilitación', 'Neurología', 'Revisión postoperatoria',
-        'Análisis de laboratorio', 'Control de peso', 'Revisión de medicamentos',
-        'Consulta virtual', 'Medicina del deporte'
-    ]
-
-    # Obtener especialidades más frecuentes del usuario
-    top_specialties = (
-        Appointment.objects.filter(user=request.user)
-        .values('specialty')
-        .annotate(count=Count('specialty'))
-        .order_by('-count')
-        .values_list('specialty', flat=True)
-    )
-
-    frequent = [s for s in top_specialties if s in all_specialties]
-    others = [s for s in all_specialties if s not in frequent]
-
-    if request.method == "POST":
-        form = AppointmentForm(request.POST, instance=appointment)
-        if form.is_valid():
-            form.save()
-            return redirect('appointment_list')  # Redirige a la lista de citas
-    else:
-        form = AppointmentForm(instance=appointment)
-
-    return render(request, 'appointments/edit_appointment.html', {
-        'form': form,
-        'frequent': frequent,
-        'others': others
-    })
-
-# Crea una cita asignándola al usuario autenticado
-
-@login_required
-def create_appointment(request):
-    user = request.user
-
-    all_specialties = [
-        'Odontología', 'Vacunación', 'Chequeo general', 'Dermatología', 'Oftalmología',
-        'Cardiología', 'Ginecología', 'Urología', 'Pediatría', 'Otorrinolaringología',
-        'Medicina interna', 'Endocrinología', 'Nutrición', 'Psicología', 'Psiquiatría',
-        'Neumología', 'Fisioterapia', 'Rehabilitación', 'Neurología', 'Revisión postoperatoria',
-        'Análisis de laboratorio', 'Control de peso', 'Revisión de medicamentos',
-        'Consulta virtual', 'Medicina del deporte'
-    ]
-
-    top_specialties = (
-        Appointment.objects.filter(user=user)
-        .values('specialty')
-        .annotate(count=Count('specialty'))
-        .order_by('-count')
-        .values_list('specialty', flat=True)
-    )
-
-    frequent = [s for s in top_specialties if s in all_specialties]
-    others = [s for s in all_specialties if s not in frequent]
-    specialty_choices = [(s, s) for s in frequent + others]
-
-    if request.method == "POST":
-        form = AppointmentForm(request.POST)
-        form.fields['specialty'].choices = specialty_choices
-
-        if form.is_valid():
-            appointment = form.save(commit=False)
-            appointment.user = user
-            appointment.save()
-            return redirect('appointment_list')
-    else:
-        date_str = request.GET.get('date')
-        initial_data = {}
-
-        if date_str:
-            try:
-                # Parseamos DD-MM-YYYY a objeto date
-                appointment_date = datetime.strptime(date_str, '%d-%m-%Y').date()
-                # Asumamos que el campo de fecha en el form se llama 'date'
-                initial_data['date'] = appointment_date
-            except ValueError:
-                pass  # Fecha inválida, ignoramos
-
-        form = AppointmentForm(initial=initial_data)
-        form.fields['specialty'].choices = specialty_choices
-
-    return render(request, 'appointments/create_appointment.html', {
-        'form': form,
-        'frequent': frequent,
-        'others': others
-    })
-
-# Solo permite eliminar citas del usuario autenticado
-@login_required
-def delete_appointment(request, appointment_id):
-    appointment = get_object_or_404(Appointment, id=appointment_id, user=request.user)  # Verifica que la cita pertenezca al usuario
-
-    if request.method == "POST":
-        appointment.delete()
-        return redirect('appointment_list')  # Redirige a la lista de citas después de eliminar
-
-    return render(request, 'appointments/delete_appointment.html', {'appointment': appointment})
-
-@login_required
-def appointment_recommendations(request):
-    user_id = request.user.id
-
-    # Obtener el servicio de recomendación usando inyección de dependencias
-    recommendation_service = get_recommendation_service()
-    
-    # Obtener las citas recomendadas para el usuario
-    recommended_appointments = recommendation_service.get_recommendations(user_id)
-
-    # Mostrar recomendaciones en el template
-    return render(request, 'appointments/recommendations.html', {
-        'recommended_appointments': recommended_appointments
-    })
-
-
-color_map = {
+SPECIALTY_COLORS = {
     'Odontología': '#4E79A7',
     'Vacunación': '#59A14F',
     'Chequeo general': '#9C755F',
@@ -183,27 +46,152 @@ color_map = {
     'Consulta virtual': '#6B6ECF',
     'Medicina del deporte': '#17BECF',
 }
+DEFAULT_EVENT_COLOR = '#7f7f7f'
+
+@login_required
+def appointment_list(request):
+    today = timezone.localdate()  # usa timezone coherente
+    upcoming_appointments = Appointment.objects.for_user(request.user).upcoming()
+    past_appointments = Appointment.objects.for_user(request.user).past()
+
+    return render(request, 'appointments/list.html', {
+        'upcoming_appointments': upcoming_appointments,
+        'past_appointments': past_appointments
+    })
+
+
+@login_required
+def edit_appointment(request, appointment_id):
+    appointment = get_object_or_404(Appointment, pk=appointment_id, user=request.user)
+
+    specialty_choices, frequent, others = get_specialty_choices_for_user(request.user)
+
+    if request.method == "POST":
+        form = AppointmentForm(request.POST, instance=appointment)
+        form.fields['specialty'].choices = specialty_choices
+        if form.is_valid():
+            try:
+                form.save()  # validación final vive en el modelo
+                messages.success(request, "Appointment updated successfully.")
+                return redirect('appointments:appointment_list')  # o 'appointment_list' si no usas namespace
+            except ValidationError as e:
+                for field, msgs in e.message_dict.items():
+                    for msg in msgs:
+                        form.add_error(field if field in form.fields else None, msg)
+    else:
+        form = AppointmentForm(instance=appointment)
+        form.fields['specialty'].choices = specialty_choices  # ✅ también en GET
+
+    return render(request, 'appointments/edit_appointment.html', {
+        'form': form,
+        'frequent': frequent,
+        'others': others,
+    })
+
+
+@login_required
+def create_appointment(request):
+    user = request.user
+    specialty_choices, frequent, others = get_specialty_choices_for_user(user)
+
+    if request.method == "POST":
+        form = AppointmentForm(request.POST)
+        form.fields['specialty'].choices = specialty_choices
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.user = user
+            try:
+                appointment.save()  # validación final en modelo
+                messages.success(request, "Appointment created successfully.")
+                return redirect('appointments:appointment_list')
+            except ValidationError as e:
+                # Adjunta errores del modelo
+                for field, msgs in e.message_dict.items():
+                    for msg in msgs:
+                        form.add_error(field if field in form.fields else None, msg)
+    else:
+        date_str = request.GET.get('date')
+        initial_data = {}
+        if date_str:
+            try:
+                appointment_date = datetime.strptime(date_str, '%d-%m-%Y').date()
+                initial_data['date'] = appointment_date
+            except ValueError:
+                pass
+
+        form = AppointmentForm(initial=initial_data)
+        form.fields['specialty'].choices = specialty_choices
+
+    return render(request, 'appointments/create_appointment.html', {
+        'form': form,
+        'frequent': frequent,
+        'others': others
+    })
+
+@login_required
+def delete_appointment(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, user=request.user)
+
+    if request.method == "POST":
+        appointment.delete()
+        return redirect('appointments:appointment_list')
+
+    return render(request, 'appointments/delete_appointment.html', {'appointment': appointment})
+
+@login_required
+def calendar_view(request):
+    user_appointments = Appointment.objects.filter(user=request.user)
+    events = []
+    for appointment in user_appointments:
+        events.append({
+            'id': appointment.id,
+            'title': appointment.specialty,
+            'start': appointment.date.isoformat(),
+            'color': color_map.get(appointment.specialty, '#7f7f7f'),
+            'extendedProps': {
+                'time': appointment.time.strftime('%H:%M') if appointment.time else 'No definida',
+                'address': appointment.address if appointment.address else 'No definida',
+                'color': color_map.get(appointment.specialty, '#7f7f7f'),
+            }
+        })
+    context = {'events_json': json.dumps(events, cls=DjangoJSONEncoder)}
+    return render(request, 'appointments/calendar.html', context)
+
+def get_specialty_choices_for_user(user):
+    # Especialidades más usadas por el usuario
+    top_specialties = (
+        Appointment.objects.filter(user=user)
+        .values('specialty')
+        .annotate(count=Count('specialty'))
+        .order_by('-count')
+        .values_list('specialty', flat=True)
+    )
+    frequent = [s for s in top_specialties if s in ALL_SPECIALTIES]
+    others = [s for s in ALL_SPECIALTIES if s not in frequent]
+    ordered = frequent + others
+    return [(s, s) for s in ordered], frequent, others
+
+def get_specialty_color(specialty: str) -> str:
+    return SPECIALTY_COLORS.get(specialty, DEFAULT_EVENT_COLOR)
 
 @login_required
 def calendar_view(request):
     user_appointments = Appointment.objects.filter(user=request.user)
     events = []
 
-    for appointment in user_appointments:
+    for appt in user_appointments:
+        color = get_specialty_color(appt.specialty or '')
         events.append({
-            'id': appointment.id,
-            'title': appointment.specialty,
-            'start': appointment.date.isoformat(),
-            'color': color_map.get(appointment.specialty, '#7f7f7f'),  # Color en el evento
+            'id': appt.id,
+            'title': appt.specialty,
+            'start': appt.date.isoformat(),
+            'color': color,
             'extendedProps': {
-                'time': appointment.time.strftime('%H:%M') if appointment.time else 'No definida',
-                'address': appointment.address if appointment.address else 'No definida',
-                'color': color_map.get(appointment.specialty, '#7f7f7f'),  # Aseguramos que el color esté aquí también
-        }
+                'time': appt.time.strftime('%H:%M') if appt.time else 'No definida',
+                'address': appt.address if appt.address else 'No definida',
+                'color': color,
+            }
         })
 
-
-    context = {
-        'events_json': json.dumps(events)
-    }
+    context = {'events_json': json.dumps(events, cls=DjangoJSONEncoder)}
     return render(request, 'appointments/calendar.html', context)

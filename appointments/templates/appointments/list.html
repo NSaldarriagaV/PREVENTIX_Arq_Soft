@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Lista de Citas</h2>
-    <a href="{% url 'create_appointment' %}" class="btn btn-primary mb-3">Agregar Cita</a>
+    <a href="{% url 'appointments:create_appointment' %}" class="btn btn-primary mb-3">Agregar Cita</a>
 
     <!-- Citas Próximas -->
     <h4>Citas Próximas</h4>
@@ -27,8 +27,8 @@
                 <td>{{ appointment.address }}</td>
                 <td>{{ appointment.doctor_name }}</td>
                 <td>
-                    <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-warning">Modificar</a>
-                    <a href="{% url 'delete_appointment' appointment.id %}" class="btn btn-danger">Eliminar</a>
+                    <a href="{% url 'appointments:edit_appointment' appointment.id %}" class="btn btn-warning">Modificar</a>
+                    <a href="{% url 'appointments:delete_appointment' appointment.id %}" class="btn btn-danger">Eliminar</a>
                 </td>
             </tr>
             {% empty %}

@@ -27,7 +27,7 @@ urlpatterns = [
     path('register/', preventixappViews.register, name='register'),
     path('login/', preventixappViews.login_view, name='login'),
     path('dashboard/', preventixappViews.dashboard, name='dashboard'),
-    path('appointments/', include('appointments.urls')),
+    path('appointments/', include(('appointments.urls', 'appointments'), namespace='appointments')),
     path('medical_history/', include('medical_history.urls')),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('profile/', preventixappViews.profile_view, name='profile'),

@@ -24,8 +24,8 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center gap-2">
-                    <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'calendar' %}">Calendario</a></li>
-                    <li><a href="{% url 'appointment_list' %}" class="btn btn-primary btn-sm">Citas</a></li>
+                    <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'appointments:calendar' %}">Calendario</a></li>
+                    <li><a href="{% url 'appointments:appointment_list' %}" class="btn btn-primary btn-sm">Citas</a></li>
                     <li><a href="{% url 'medical_history' %}" class="btn btn-primary btn-sm">Mis Documentos</a></li>
                     <li><a href="{% url 'prescription_list' %}" class="btn btn-primary btn-sm">Prescripciones</a></li>
                     <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'profile' %}">Perfil</a></li>
