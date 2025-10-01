@@ -4,40 +4,189 @@
 
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<h2>Mi Perfil</h2>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Card Principal del Perfil -->
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-user-circle me-2" style="font-size: 1.5rem;"></i>
+                            <h4 class="mb-0">Mi Perfil</h4>
+                        </div>
+                        <span class="badge bg-light text-dark fs-6">
+                            <i class="fas fa-heartbeat me-1"></i>Preventix
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Sección de Foto de Perfil -->
+                        <div class="col-md-4 text-center">
+                            <div class="profile-picture-section">
+                                <div class="position-relative d-inline-block">
+                                    <div class="profile-picture-wrapper">
+                                        {% if user.profile_picture %}
+                                            <img src="{{ user.profile_picture.url }}" alt="Foto de perfil" class="profile-img">
+                                        {% else %}
+                                            <img src="{% static 'images/default_profile.png' %}" alt="Foto de perfil" class="profile-img">
+                                        {% endif %}
+                                        
+                                        <form method="POST" enctype="multipart/form-data" id="profile-pic-form">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="save_picture" value="true">
+                                            <label for="id_profile_picture" class="edit-icon" aria-label="Cambiar foto de perfil">
+                                                <i class="fas fa-camera"></i>
+                                            </label>
+                                            {{ picture_form.profile_picture }}
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <h5 class="text-primary mb-1">{{ user.first_name }} {{ user.last_name }}</h5>
+                                    <p class="text-muted mb-0">{{ user.email }}</p>
+                                    <small class="text-success">
+                                        <i class="fas fa-circle me-1"></i>Activo
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sección de Información Personal -->
+                        <div class="col-md-8">
+                            <form method="POST" id="profile-info-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="info_form" value="true">
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-user me-1 text-primary"></i>Nombre
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.first_name }}</span>
+                                            <input type="text" name="first_name" value="{{ user.first_name }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-user me-1 text-primary"></i>Apellido
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.last_name }}</span>
+                                            <input type="text" name="last_name" value="{{ user.last_name }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-phone me-1 text-success"></i>Teléfono
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.phone_number }}</span>
+                                            <input type="text" name="phone_number" value="{{ user.phone_number }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-map-marker-alt me-1 text-success"></i>Dirección
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.direccion }}</span>
+                                            <input type="text" name="direccion" value="{{ user.direccion }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-birthday-cake me-1 text-warning"></i>Fecha de Nacimiento
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.birth_date }}</span>
+                                            <input type="date" name="birth_date" value="{{ user.birth_date }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-tint me-1 text-danger"></i>Grupo Sanguíneo
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.blood_type }}</span>
+                                            <input type="text" name="blood_type" value="{{ user.blood_type }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">
+                                                <i class="fas fa-shield-alt me-1 text-info"></i>EPS / Aseguradora
+                                            </label>
+                                            <span class="data-view form-control-plaintext">{{ user.insurance }}</span>
+                                            <input type="text" name="insurance" value="{{ user.insurance }}" class="edit-field form-control" style="display: none;">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Botones de Acción -->
+                                <div class="d-flex gap-2 justify-content-end mt-4">
+                                    <button type="button" id="edit-btn" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit me-1"></i>Editar Perfil
+                                    </button>
+                                    <button type="submit" name="save_info" id="save-btn" class="btn btn-success" style="display: none;">
+                                        <i class="fas fa-save me-1"></i>Guardar Cambios
+                                    </button>
+                                    <button type="button" id="cancel-btn" class="btn btn-outline-secondary" style="display: none;">
+                                        <i class="fas fa-times me-1"></i>Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <style>
-.profile-container {
-    display: flex;
-    flex-direction: row;
-    gap: 60px;
-    align-items: flex-start;
-}
-
 .profile-picture-wrapper {
     position: relative;
     width: 150px;
     height: 150px;
+    margin: 0 auto;
 }
 
-.profile-picture-wrapper img {
+.profile-img {
     width: 100%;
-    height: 125%;
+    height: 100%;
     border-radius: 50%;
     object-fit: cover;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .edit-icon {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.6);
+    bottom: 5px;
+    right: 5px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 50%;
-    padding: 10px;
+    padding: 8px;
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.3s ease;
+    border: 2px solid white;
 }
 
 .profile-picture-wrapper:hover .edit-icon {
@@ -46,109 +195,57 @@
 
 .edit-icon i {
     color: white;
-    font-size: 18px;
+    font-size: 14px;
 }
 
 input[type="file"] {
     display: none;
 }
 
-.profile-details {
-    width: 300px;
+.form-control-plaintext {
+    padding: 0.375rem 0;
+    margin-bottom: 0;
+    line-height: 1.5;
+    color: #495057;
+    background-color: transparent;
+    border: solid transparent;
+    border-width: 1px 0;
 }
 
-.form-group {
-    margin-bottom: 15px;
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
-.form-group label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
+.profile-picture-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
-.data-view {
-    display: inline-block;
+.card {
+    border-radius: 15px;
 }
 
-input[type="text"], input[type="date"] {
-    width: 100%;
-    margin-bottom: 8px;
-    border-radius: 5px;
-    display: none;
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    border-bottom: 3px solid rgba(255,255,255,0.2);
 }
 
-#edit-btn, #save-btn, #cancel-btn {
-    margin-right: 5px;
+.form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
 }
 </style>
-
-<div class="profile-container">
-    <div class="profile-picture-wrapper">
-        {% if user.profile_picture %}
-            <img src="{{ user.profile_picture.url }}" alt="Foto de perfil">
-        {% else %}
-            <img src="{% static 'images/default_profile.png' %}" alt="Foto de perfil">
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data" id="profile-pic-form">
-            {% csrf_token %}
-            <input type="hidden" name="save_picture" value="true">
-            <label for="id_profile_picture" class="edit-icon" aria-label="Cambiar foto de perfil">
-                <i class="fas fa-pencil-alt"></i>
-            </label>
-            {{ picture_form.profile_picture }}
-        </form>
-    </div>
-
-    <!-- Formulario para editar datos del usuario -->
-    <form method="POST" id="profile-info-form">
-        {% csrf_token %}
-        <input type="hidden" name="info_form" value="true"> <!-- 🔥 Esto ayuda a identificar el formulario -->
-        <div class="profile-details">
-            <div class="form-group">
-                <label>Nombre:</label>
-                <span class="data-view">{{ user.first_name }}</span>
-                <input type="text" name="first_name" value="{{ user.first_name }}" class="edit-field">
-            </div>
-            <div class="form-group">
-                <label>Apellido:</label>
-                <span class="data-view">{{ user.last_name }}</span>
-                <input type="text" name="last_name" value="{{ user.last_name }}" class="edit-field">
-            </div>
-            <div class="form-group">
-                <label>Teléfono:</label>
-                <span class="data-view">{{ user.phone_number }}</span>
-                <input type="text" name="phone_number" value="{{ user.phone_number }}" class="edit-field">
-            </div>
-            <div class="form-group">
-                <label>Dirección:</label>
-                <span class="data-view">{{ user.direccion }}</span>
-                <input type="text" name="direccion" value="{{ user.direccion }}" class="edit-field">
-            </div>
-            <div class="form-group">
-                <label>Fecha de Nacimiento:</label>
-                <span class="data-view">{{ user.birth_date }}</span>
-                <input type="date" name="birth_date" value="{{ user.birth_date }}" class="edit-field">
-            </div>
-            <div class="form-group">
-                <label>Grupo Sanguíneo:</label>
-                <span class="data-view">{{ user.blood_type }}</span>
-                <input type="text" name="blood_type" value="{{ user.blood_type }}" class="edit-field">
-            </div>
-            <div class="form-group">
-                <label>EPS / Aseguradora:</label>
-                <span class="data-view">{{ user.insurance }}</span>
-                <input type="text" name="insurance" value="{{ user.insurance }}" class="edit-field">
-            </div>
-
-            <button type="button" id="edit-btn">Editar</button>
-            <button type="submit" name="save_info" id="save-btn" style="display: none;">Guardar</button>
-            <button type="button" id="cancel-btn" style="display: none;">Cancelar</button>
-        </div>
-    </form>
-
-</div>
 
 <script>
     const editButton = document.getElementById('edit-btn');

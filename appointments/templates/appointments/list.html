@@ -1,81 +1,293 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Lista de Citas</h2>
-    <a href="{% url 'create_appointment' %}" class="btn btn-primary mb-3">Agregar Cita</a>
+<div class="container">
+    <!-- Header con título y botón de agregar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">
+                        <i class="fas fa-calendar-alt me-2"></i>Mis Citas Médicas
+                    </h2>
+                    <p class="text-muted mb-0">Gestiona tus citas médicas de forma organizada</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'calendar' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-calendar me-1"></i>Vista Calendario
+                    </a>
+                    <a href="{% url 'create_appointment' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Nueva Cita
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                    <h4>{{ upcoming_appointments|length }}</h4>
+                    <p class="mb-0">Próximas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-history fa-2x mb-2"></i>
+                    <h4>{{ past_appointments|length }}</h4>
+                    <p class="mb-0">Pasadas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-stethoscope fa-2x mb-2"></i>
+                    <h4>{{ upcoming_appointments|length|add:past_appointments|length }}</h4>
+                    <p class="mb-0">Total</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4>{% now "H:i" %}</h4>
+                    <p class="mb-0">Hora Actual</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Citas Próximas -->
-    <h4>Citas Próximas</h4>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Especialidad</th>
-                <th>Fecha</th>
-                <th>Hora</th>
-                <th>Dirección</th>
-                <th>Doctor(a)</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for appointment in upcoming_appointments %}
-            <tr>
-                <td>{{ appointment.specialty }}</td>
-                <td>{{ appointment.date }}</td>
-                <td>{{ appointment.time }}</td>
-                <td>{{ appointment.address }}</td>
-                <td>{{ appointment.doctor_name }}</td>
-                <td>
-                    <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-warning">Modificar</a>
-                    <a href="{% url 'delete_appointment' appointment.id %}" class="btn btn-danger">Eliminar</a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5">No hay citas próximas.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- Botón Mostrar/Ocultar citas pasadas -->
-    <button class="btn btn-outline-secondary mb-2" id="togglePastBtn" onclick="togglePast()">Mostrar citas pasadas</button>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-check me-2"></i>Citas Próximas
+                        </h5>
+                        <span class="badge bg-light text-dark fs-6">
+                            {{ upcoming_appointments|length }} cita{{ upcoming_appointments|length|pluralize }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if upcoming_appointments %}
+                        <div class="list-group list-group-flush">
+                            {% for appointment in upcoming_appointments %}
+                            <div class="list-group-item appointment-card">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <div class="specialty-icon">
+                                            <i class="fas fa-stethoscope fa-2x text-primary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h6 class="mb-1 text-primary">{{ appointment.specialty }}</h6>
+                                        <small class="text-muted">{{ appointment.title }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="date-time">
+                                            <i class="fas fa-calendar me-1 text-success"></i>
+                                            <strong>{{ appointment.date|date:"d/m/Y" }}</strong>
+                                        </div>
+                                        <div class="date-time mt-1">
+                                            <i class="fas fa-clock me-1 text-success"></i>
+                                            <strong>{{ appointment.time|date:"H:i" }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="location">
+                                            <i class="fas fa-map-marker-alt me-1 text-info"></i>
+                                            <small>{{ appointment.address|truncatechars:30 }}</small>
+                                        </div>
+                                        <div class="doctor mt-1">
+                                            <i class="fas fa-user-md me-1 text-warning"></i>
+                                            <small>{{ appointment.doctor_name }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="btn-group-vertical btn-group-sm" role="group">
+                                            <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-outline-warning btn-sm mb-1" title="Editar cita">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                            <a href="{% url 'delete_appointment' appointment.id %}" class="btn btn-outline-danger btn-sm" title="Eliminar cita">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-calendar-plus text-muted fa-4x mb-3"></i>
+                            <h4 class="text-muted">No hay citas próximas</h4>
+                            <p class="text-muted mb-4">No tienes citas programadas en este momento.</p>
+                            <a href="{% url 'create_appointment' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>Agendar Primera Cita
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Citas Pasadas -->
-    <div id="pastAppointments" style="display: none;">
-        <h4 class="mt-3">Citas Pasadas</h4>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Especialidad</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Doctor(a)</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for appointment in past_appointments %}
-                <tr>
-                    <td>{{ appointment.title }}</td>
-                    <td>{{ appointment.date }}</td>
-                    <td>{{ appointment.time }}</td>
-                    <td>{{ appointment.doctor_name }}</td>
-                    <td>
-                        <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-warning">Modificar</a>
-                        <a href="{% url 'delete_appointment' appointment.id %}" class="btn btn-danger">Eliminar</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5">No hay citas pasadas.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>Historial de Citas
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-light text-dark fs-6">
+                                {{ past_appointments|length }} cita{{ past_appointments|length|pluralize }}
+                            </span>
+                            <button class="btn btn-outline-light btn-sm" id="togglePastBtn" onclick="togglePast()">
+                                <i class="fas fa-eye me-1"></i>Mostrar/Ocultar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0" id="pastAppointments" style="display: none;">
+                    {% if past_appointments %}
+                        <div class="list-group list-group-flush">
+                            {% for appointment in past_appointments %}
+                            <div class="list-group-item appointment-card past-appointment">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <div class="specialty-icon">
+                                            <i class="fas fa-stethoscope fa-2x text-secondary"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h6 class="mb-1 text-secondary">{{ appointment.specialty }}</h6>
+                                        <small class="text-muted">{{ appointment.title }}</small>
+                                    </div>
+                                    <div class="col-md-2">
+                                            <div class="date-time">
+                                                <i class="fas fa-calendar me-1 text-secondary"></i>
+                                                <strong>{{ appointment.date|date:"d/m/Y" }}</strong>
+                                            </div>
+                                            <div class="date-time mt-1">
+                                                <i class="fas fa-clock me-1 text-secondary"></i>
+                                                <strong>{{ appointment.time|date:"H:i" }}</strong>
+                                            </div>
+                                        </div>
+                                    <div class="col-md-3">
+                                        <div class="doctor">
+                                            <i class="fas fa-user-md me-1 text-warning"></i>
+                                            <small>{{ appointment.doctor_name }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="btn-group-vertical btn-group-sm" role="group">
+                                            <a href="{% url 'edit_appointment' appointment.id %}" class="btn btn-outline-warning btn-sm mb-1" title="Editar cita">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                            <a href="{% url 'delete_appointment' appointment.id %}" class="btn btn-outline-danger btn-sm" title="Eliminar cita">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="card-body text-center py-4">
+                            <i class="fas fa-history text-muted fa-3x mb-3"></i>
+                            <h5 class="text-muted">No hay citas pasadas</h5>
+                            <p class="text-muted mb-0">Tu historial de citas aparecerá aquí.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Font Awesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    .appointment-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .appointment-card:hover {
+        background-color: #f8f9fa;
+        border-left-color: #007bff;
+    }
+    
+    .past-appointment {
+        opacity: 0.8;
+    }
+    
+    .past-appointment:hover {
+        opacity: 1;
+    }
+    
+    .specialty-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .date-time {
+        font-size: 0.9rem;
+    }
+    
+    .location, .doctor {
+        font-size: 0.85rem;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .btn-group-vertical .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .badge {
+        border-radius: 8px;
+    }
+</style>
 
 <script>
     function togglePast() {
@@ -84,7 +296,10 @@
         const isHidden = container.style.display === "none";
 
         container.style.display = isHidden ? "block" : "none";
-        button.textContent = isHidden ? "Ocultar citas pasadas" : "Mostrar citas pasadas";
+        button.innerHTML = isHidden ? 
+            '<i class="fas fa-eye-slash me-1"></i>Ocultar' : 
+            '<i class="fas fa-eye me-1"></i>Mostrar';
     }
 </script>
+
 {% endblock %}

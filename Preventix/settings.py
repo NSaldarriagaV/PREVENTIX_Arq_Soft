@@ -147,6 +147,6 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Configuración del servicio de recomendaciones
-RECOMMENDATION_SERVICE_TYPE = 'knn'  # 'knn' o 'mock'
+RECOMMENDATION_SERVICE_TYPE = 'mock'  # 'knn' o 'mock'
 KNN_MODEL_PATH = 'appointments/models/knn_model.pkl'
 KNN_N_NEIGHBORS = 3  

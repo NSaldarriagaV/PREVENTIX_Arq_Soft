@@ -1,88 +1,244 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container">
-    <h2>Mis Documentos</h2>
-    <a href="{% url 'add_file' %}" class="btn btn-primary">Adjuntar Registro</a>
-
-    <div class="file-container mt-3">
-        {% for file in files %}
-        <div class="file-entry">
-            <span class="file-title">{{ file.title }}</span>
-            <span class="file-date">{{ file.uploaded_at|date:"d/m/Y H:i" }}</span>
-
-            <!-- Marcas rojas que aparecerán al presionar "Eliminar" -->
-            <a href="{% url 'delete_file' file.id %}" class="delete-marker"></a>
-
-             <!-- Nuevo botón "Ver" -->
-             <a href="{% url 'view_file' file.id %}" class="btn btn-info btn-sm">Ver</a>
-
-            <!-- Botón para modificar -->
-            <a href="{% url 'edit_file' file.id %}" class="btn btn-warning btn-sm">Modificar</a>
+    <!-- Header con título y botón de agregar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">
+                        <i class="fas fa-folder-medical me-2"></i>Mi Historial Médico
+                    </h2>
+                    <p class="text-muted mb-0">Gestiona tus documentos médicos de forma segura</p>
+                </div>
+                <a href="{% url 'add_file' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Adjuntar Documento
+                </a>
+            </div>
         </div>
-        {% empty %}
-        <p>No hay archivos en el historial médico.</p>
-        {% endfor %}
     </div>
 
-    <div class="fixed-buttons">
-        {% if files %}
-            <button id="toggleDelete" class="btn btn-danger">Eliminar</button>
-        {% endif %}
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-medical fa-2x mb-2"></i>
+                    <h4>{{ files|length }}</h4>
+                    <p class="mb-0">Documentos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                    <h4>{% now "Y" %}</h4>
+                    <p class="mb-0">Año Actual</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                    <h4>Seguro</h4>
+                    <p class="mb-0">Protegido</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4>24/7</h4>
+                    <p class="mb-0">Disponible</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de documentos -->
+    <div class="row">
+        <div class="col-12">
+            {% if files %}
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Documentos Médicos
+                            </h5>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="viewMode">
+                                    <i class="fas fa-eye me-1"></i>Vista
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" id="deleteMode">
+                                    <i class="fas fa-trash me-1"></i>Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for file in files %}
+                            <div class="list-group-item file-entry" data-file-id="{{ file.id }}">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="file-icon me-3">
+                                            <i class="fas fa-file-pdf text-danger fa-2x"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1 text-primary">{{ file.title }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                Subido el {{ file.uploaded_at|date:"d/m/Y" }} a las {{ file.uploaded_at|date:"H:i" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="file-actions">
+                                        <!-- Botones normales -->
+                                        <div class="normal-actions">
+                                            <a href="{% url 'view_file' file.id %}" class="btn btn-outline-info btn-sm me-1" title="Ver documento">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'edit_file' file.id %}" class="btn btn-outline-warning btn-sm me-1" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                        
+                                        <!-- Botón de eliminar (oculto por defecto) -->
+                                        <div class="delete-actions" style="display: none;">
+                                            <a href="{% url 'delete_file' file.id %}" class="btn btn-danger btn-sm" title="Eliminar documento">
+                                                <i class="fas fa-trash"></i> Eliminar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-folder-open text-muted fa-4x mb-3"></i>
+                        <h4 class="text-muted">No hay documentos</h4>
+                        <p class="text-muted mb-4">Aún no has subido ningún documento médico.</p>
+                        <a href="{% url 'add_file' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Subir Primer Documento
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 
+<!-- Font Awesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 <style>
-    .file-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
     .file-entry {
-        position: relative;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .file-entry:hover {
+        background-color: #f8f9fa;
+        border-left-color: #007bff;
+    }
+    
+    .file-entry.deleting {
+        background-color: #fff5f5;
+        border-left-color: #dc3545;
+    }
+    
+    .file-icon {
+        width: 50px;
+        height: 50px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
     }
-
-    /* Botón de eliminación (inicialmente oculto) */
-    .delete-marker {
-        display: none;
-        position: absolute;
-        top: 50%;
-        left: -15px;
-        transform: translateY(-50%);
-        background-color: red;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        text-decoration: none;
-        font-weight: bold;
-        font-size: 20px;
+    
+    .file-actions .btn {
+        border-radius: 6px;
+        font-weight: 500;
     }
-
-    .file-entry.deleting .delete-marker {
-        display: inline-block;
+    
+    .card {
+        border-radius: 12px;
+        border: none;
     }
-
-    .fixed-buttons {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .btn-group .btn {
+        border-radius: 6px;
+        margin-left: 2px;
+    }
+    
+    .btn-group .btn:first-child {
+        margin-left: 0;
     }
 </style>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        let toggleButton = document.getElementById("toggleDelete");
-        if (toggleButton) {
-            toggleButton.addEventListener("click", function () {
-                document.querySelectorAll(".file-entry").forEach(el => el.classList.toggle("deleting"));
+        const viewModeBtn = document.getElementById('viewMode');
+        const deleteModeBtn = document.getElementById('deleteMode');
+        const fileEntries = document.querySelectorAll('.file-entry');
+        
+        if (viewModeBtn && deleteModeBtn) {
+            // Modo vista normal
+            viewModeBtn.addEventListener('click', function() {
+                fileEntries.forEach(entry => {
+                    entry.classList.remove('deleting');
+                    entry.querySelector('.normal-actions').style.display = 'block';
+                    entry.querySelector('.delete-actions').style.display = 'none';
+                });
+                
+                viewModeBtn.classList.add('btn-secondary');
+                viewModeBtn.classList.remove('btn-outline-secondary');
+                deleteModeBtn.classList.remove('btn-danger');
+                deleteModeBtn.classList.add('btn-outline-danger');
             });
+            
+            // Modo eliminación
+            deleteModeBtn.addEventListener('click', function() {
+                fileEntries.forEach(entry => {
+                    entry.classList.add('deleting');
+                    entry.querySelector('.normal-actions').style.display = 'none';
+                    entry.querySelector('.delete-actions').style.display = 'block';
+                });
+                
+                deleteModeBtn.classList.add('btn-danger');
+                deleteModeBtn.classList.remove('btn-outline-danger');
+                viewModeBtn.classList.remove('btn-secondary');
+                viewModeBtn.classList.add('btn-outline-secondary');
+            });
+            
+            // Inicializar en modo vista
+            viewModeBtn.click();
         }
     });
 </script>

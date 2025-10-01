@@ -55,27 +55,77 @@ def user_login(request):
 
 def register(request):
     if request.method == 'POST':
-        phone = request.POST['phone']
-        email = request.POST['email']
+        # Obtener datos del formulario
+        name = request.POST.get('name', '').strip()
+        age = request.POST.get('age', '')
+        email = request.POST.get('email', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        address = request.POST.get('address', '').strip()
+        password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
         
-        # Verificar si el número de teléfono ya existe
-        if CustomUser.objects.filter(phone_number=phone).exists():
-            messages.error(request, 'Este número de teléfono ya está registrado.')
-            return redirect('register')  # Asegúrate de que 'register' sea el nombre correcto de la URL
-
+        # Validaciones básicas
+        if not all([name, email, phone, address, password, confirm_password]):
+            messages.error(request, 'Todos los campos son obligatorios.')
+            return render(request, 'register.html')
+        
+        if password != confirm_password:
+            messages.error(request, 'Las contraseñas no coinciden.')
+            return render(request, 'register.html')
+        
+        if len(password) < 8:
+            messages.error(request, 'La contraseña debe tener al menos 8 caracteres.')
+            return render(request, 'register.html')
+        
+        # Verificar si el email ya existe
         if CustomUser.objects.filter(email=email).exists():
             messages.error(request, 'Este correo electrónico ya está registrado.')
-            return redirect('register')
-
-        # Guardar el usuario si no hay conflictos
-        user = CustomUser.objects.create_user(
-            username=email,
-            phone_number=phone,
-            email=email,
-            password=request.POST['password']
-        )
-        login(request, user)
-        return redirect('dashboard')
+            return render(request, 'register.html')
+        
+        # Verificar si el teléfono ya existe
+        if CustomUser.objects.filter(phone_number=phone).exists():
+            messages.error(request, 'Este número de teléfono ya está registrado.')
+            return render(request, 'register.html')
+        
+        try:
+            # Dividir el nombre en first_name y last_name
+            name_parts = name.split(' ', 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+            
+            # Calcular fecha de nacimiento aproximada si se proporciona la edad
+            birth_date = None
+            if age and age.isdigit():
+                from datetime import date
+                current_year = date.today().year
+                birth_year = current_year - int(age)
+                birth_date = date(birth_year, 1, 1)  # Usar 1 de enero como fecha aproximada
+            
+            # Crear el usuario
+            user = CustomUser.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone,
+                direccion=address,  # Usar la dirección proporcionada
+                birth_date=birth_date
+            )
+            
+            # Autenticar y hacer login automáticamente
+            user = authenticate(request, username=email, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'¡Bienvenido {first_name}! Tu cuenta ha sido creada exitosamente.')
+                return redirect('dashboard')
+            else:
+                messages.error(request, 'Error al crear la cuenta. Inténtalo de nuevo.')
+                return render(request, 'register.html')
+                
+        except Exception as e:
+            messages.error(request, f'Error al crear la cuenta: {str(e)}')
+            return render(request, 'register.html')
 
     return render(request, 'register.html')
 

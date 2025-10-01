@@ -1,80 +1,206 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="container">
-    <h1 class="my-4">{% if prescription %}Editar{% else %}Nueva{% endif %} Prescripción</h1>
-
-    <div class="card">
-        <div class="card-body">
-            <form method="post">
-                {% csrf_token %}
-                
-                <div class="mb-3">
-                    <label for="{{ form.medication.id_for_label }}" class="form-label">Medicamento</label>
-                    {{ form.medication }}
-                    <small class="form-text text-muted">Nombre del medicamento prescrito.</small>
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header {% if prescription %}bg-warning{% else %}bg-info{% endif %} text-white">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-pills me-2"></i>
+                            <h4 class="mb-0">{% if prescription %}Editar{% else %}Nueva{% endif %} Prescripción Médica</h4>
+                        </div>
+                        <span class="badge bg-light text-dark fs-6">
+                            <i class="fas fa-info-circle me-1"></i>Información del Medicamento
+                        </span>
+                    </div>
                 </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Sección 1: Información Básica del Medicamento -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2 mb-3">
+                                    <i class="fas fa-capsules me-2"></i>Información del Medicamento
+                                </h5>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="{{ form.medication.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-pills me-1 text-primary"></i>Nombre del Medicamento
+                                    </label>
+                                    {{ form.medication }}
+                                    <small class="form-text text-muted">Ej: Acetaminofén, Ibuprofeno, Amoxicilina</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.administration_method.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-syringe me-1 text-primary"></i>Vía de Administración
+                                    </label>
+                                    {{ form.administration_method }}
+                                    <small class="form-text text-muted">Cómo se administra</small>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="mb-3">
-                    <label for="{{ form.unit_per_dose.id_for_label }}" class="form-label">Cantidad por dosis</label>
-                    {{ form.unit_per_dose }}
-                    <small class="form-text text-muted">Cantidad de medicamento que debe tomarse o administrarse por dosis (por ejemplo, 1, 2, 5).</small>
+                        <!-- Sección 2: Dosificación -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-success border-bottom pb-2 mb-3">
+                                    <i class="fas fa-calculator me-2"></i>Dosificación
+                                </h5>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.unit_per_dose.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-hashtag me-1 text-success"></i>Cantidad por Dosis
+                                    </label>
+                                    {{ form.unit_per_dose }}
+                                    <small class="form-text text-muted">Ej: 1, 2, 5</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.dosage_amount.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-weight me-1 text-success"></i>Cantidad
+                                    </label>
+                                    {{ form.dosage_amount }}
+                                    <small class="form-text text-muted">Ej: 500, 10</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.dosage_unit.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-ruler me-1 text-success"></i>Unidad
+                                    </label>
+                                    {{ form.dosage_unit }}
+                                    <small class="form-text text-muted">mg, ml, etc.</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.interval_hours.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-clock me-1 text-success"></i>Cada (horas)
+                                    </label>
+                                    {{ form.interval_hours }}
+                                    <small class="form-text text-muted">Ej: 4, 8, 12</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección 3: Duración del Tratamiento -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2 mb-3">
+                                    <i class="fas fa-calendar-alt me-2"></i>Duración del Tratamiento
+                                </h5>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.duration_days.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-day me-1 text-warning"></i>Duración (días)
+                                    </label>
+                                    {{ form.duration_days }}
+                                    <small class="form-text text-muted">Días de tratamiento</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.start_date.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-calendar-check me-1 text-warning"></i>Fecha de Inicio
+                                    </label>
+                                    {{ form.start_date }}
+                                    <small class="form-text text-muted">dd/mm/aaaa</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar-times me-1 text-warning"></i>Fecha de Fin
+                                    </label>
+                                    <input type="text" class="form-control" readonly 
+                                           value="{% if prescription %}{{ prescription.end_date|date:'d/m/Y' }}{% endif %}" 
+                                           style="background-color: #f8f9fa;">
+                                    <small class="form-text text-muted">Calculada automáticamente</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sección 4: Información Adicional -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-danger border-bottom pb-2 mb-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Información Adicional
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.restrictions.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-ban me-1 text-danger"></i>Restricciones y Precauciones
+                                    </label>
+                                    {{ form.restrictions }}
+                                    <small class="form-text text-muted">Ej: Evitar alcohol, tomar con comida, no manejar</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                        <i class="fas fa-comment-medical me-1 text-danger"></i>Instrucciones Especiales
+                                    </label>
+                                    {{ form.description }}
+                                    <small class="form-text text-muted">Efectos secundarios, instrucciones del médico</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a href="{% url 'prescription_list' %}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-arrow-left me-2"></i>Volver a la Lista
+                                    </a>
+                                    <button type="submit" class="btn {% if prescription %}btn-warning{% else %}btn-info{% endif %} btn-lg">
+                                        <i class="fas fa-save me-2"></i>{% if prescription %}Actualizar{% else %}Crear{% endif %} Prescripción
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.dosage_amount.id_for_label }}" class="form-label">Cantidad de dosis</label>
-                    {{ form.dosage_amount }}
-                    <small class="form-text text-muted">Cantidad de medicamento por toma (por ejemplo, 500mg, 10ml), si aplica.</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.dosage_unit.id_for_label }}" class="form-label">Unidad de dosis</label>
-                    {{ form.dosage_unit }}
-                    <small class="form-text text-muted">Unidad de medida de la dosis (por ejemplo, mg, ml, tabletas, cápsulas).</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.interval_hours.id_for_label }}" class="form-label">Intervalo entre dosis (horas)</label>
-                    {{ form.interval_hours }}
-                    <small class="form-text text-muted">Número de horas entre cada dosis (por ejemplo, 4 horas, 8 horas).</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.duration_days.id_for_label }}" class="form-label">Duración del tratamiento (días)</label>
-                    {{ form.duration_days }}
-                    <small class="form-text text-muted">Número total de días que durará el tratamiento (por ejemplo, 7 días, 30 días).</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.start_date.id_for_label }}" class="form-label">Fecha de inicio</label>
-                    {{ form.start_date }}
-                    <small class="form-text text-muted">Fecha en la que comienza el tratamiento (formato: dd/mm/aaaa).</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.administration_method.id_for_label }}" class="form-label">Método de administración</label>
-                    {{ form.administration_method }}
-                    <small class="form-text text-muted">Selecciona cómo se debe administrar el medicamento (oral, inyección, tópico, etc.).</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.restrictions.id_for_label }}" class="form-label">Restricciones</label>
-                    {{ form.restrictions }}
-                    <small class="form-text text-muted">Cualquier restricción o precaución relacionada con el uso del medicamento (por ejemplo, evitar alcohol, tomar con comida, etc.).</small>
-                </div>
-
-                <div class="mb-3">
-                    <label for="{{ form.description.id_for_label }}" class="form-label">Descripción</label>
-                    {{ form.description }}
-                    <small class="form-text text-muted">Detalles adicionales sobre la prescripción (por ejemplo, instrucciones especiales o efectos secundarios).</small>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
-                    {% if prescription %}Actualizar{% else %}Crear{% endif %}
-                </button>
-                <a href="{% url 'prescription_list' %}" class="btn btn-secondary">Volver a la lista</a>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<!-- Font Awesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    .border-bottom {
+        border-bottom: 2px solid #dee2e6 !important;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .card-header {
+        border-bottom: 3px solid rgba(255,255,255,0.2);
+    }
+    
+    .form-label {
+        font-size: 0.95rem;
+    }
+    
+    .form-text {
+        font-size: 0.8rem;
+    }
+</style>
 {% endblock %}

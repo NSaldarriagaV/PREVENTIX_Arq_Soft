@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
 {% if messages %}
     <div class="container mt-3">
         {% for message in messages %}
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ message }}
+                <i class="fas fa-check-circle me-2"></i>{{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
             </div>
         {% endfor %}
@@ -13,91 +14,322 @@
 {% endif %}
 
 <div class="container">
-    <h1 class="my-4">Gestión de Prescripciones</h1>
+    <!-- Header con título y botón de agregar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">
+                        <i class="fas fa-pills me-2"></i>Mis Prescripciones Médicas
+                    </h2>
+                    <p class="text-muted mb-0">Gestiona tus medicamentos y tratamientos</p>
+                </div>
+                <a href="{% url 'create_prescription' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus me-2"></i>Nueva Prescripción
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <!-- Botón para agregar una nueva prescripción -->
-    <a href="{% url 'create_prescription' %}" class="btn btn-primary mb-3">Agregar nueva prescripción</a>
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-pills fa-2x mb-2"></i>
+                    <h4>{{ prescriptions|length }}</h4>
+                    <p class="mb-0">Prescripciones</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h4>{{ prescriptions|length }}</h4>
+                    <p class="mb-0">Activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                    <h4>{% now "d/m" %}</h4>
+                    <p class="mb-0">Hoy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                    <h4>Seguro</h4>
+                    <p class="mb-0">Protegido</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <h2>Lista de Prescripciones</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Medicamento</th>
-                <th>Cantidad por toma</th>
-                <th>Dosis</th>
-                <th>Intervalo (h)</th>
-                <th>Duración (días)</th>
-                <th>Inicio</th>
-                <th>Fin</th>
-                <th>Forma de administración</th>
-                <th>Restricciones</th>
-                <th>Descripción</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for prescription in prescriptions %}
-            <tr>
-                <td>{{ prescription.medication }}</td>
-                <td>{{ prescription.unit_per_dose }}</td>
-                <td>
-                    {% if prescription.dosage_amount %}
-                        {{ prescription.dosage_amount }} {{ prescription.dosage_unit }}
-                    {% else %}
-                        N/A
-                    {% endif %}
-                </td>
-                <td>{{ prescription.interval_hours }}</td>
-                <td>{{ prescription.duration_days }}</td>
-                <td>{{ prescription.start_date }}</td>
-                <td>{{ prescription.end_date }}</td>
-                <td>{{ prescription.get_administration_method_display }}</td>
-                <td>{{ prescription.restrictions|default:"N/A" }}</td>
-                <td>{{ prescription.description|default:"N/A" }}</td>
-                <td>
-                    <a href="{% url 'edit_prescription' prescription.id %}" class="btn btn-warning btn-sm">Modificar</a>
-                    <button type="button" class="btn btn-danger btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#deleteModal"
-                            data-id="{{ prescription.id }}">
-                        Eliminar
-                    </button>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="11" class="text-center">No hay prescripciones registradas.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Lista de prescripciones -->
+    <div class="row">
+        <div class="col-12">
+            {% if prescriptions %}
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>Prescripciones Médicas
+                            </h5>
+                            <span class="badge bg-primary fs-6">
+                                {{ prescriptions|length }} prescripción{{ prescriptions|length|pluralize }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            {% for prescription in prescriptions %}
+                            <div class="list-group-item prescription-card">
+                                <div class="row align-items-center">
+                                    <!-- Icono y medicamento -->
+                                    <div class="col-md-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="medication-icon me-3">
+                                                <i class="fas fa-capsules fa-2x text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-1 text-primary">{{ prescription.medication }}</h6>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-syringe me-1"></i>
+                                                    {{ prescription.get_administration_method_display }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Dosificación -->
+                                    <div class="col-md-2">
+                                        <div class="dosage-info">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="fas fa-hashtag me-1 text-success"></i>
+                                                <strong>{{ prescription.unit_per_dose }} unidad{{ prescription.unit_per_dose|pluralize:"es" }}</strong>
+                                            </div>
+                                            {% if prescription.dosage_amount %}
+                                            <small class="text-muted">
+                                                {{ prescription.dosage_amount }} {{ prescription.dosage_unit }}
+                                            </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Frecuencia -->
+                                    <div class="col-md-2">
+                                        <div class="frequency-info">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="fas fa-clock me-1 text-warning"></i>
+                                                <strong>Cada {{ prescription.interval_hours }}h</strong>
+                                            </div>
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar-day me-1"></i>
+                                                {{ prescription.duration_days }} día{{ prescription.duration_days|pluralize:"s" }}
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Fechas -->
+                                    <div class="col-md-2">
+                                        <div class="date-info">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <i class="fas fa-play me-1 text-info"></i>
+                                                <strong>{{ prescription.start_date|date:"d/m/Y" }}</strong>
+                                            </div>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-stop me-1 text-danger"></i>
+                                                <strong>{{ prescription.end_date|date:"d/m/Y" }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Estado y acciones -->
+                                    <div class="col-md-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="status-info">
+                                                {% if prescription.is_active %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check-circle me-1"></i>Activa
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-pause-circle me-1"></i>Inactiva
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="btn-group-vertical btn-group-sm" role="group">
+                                                <a href="{% url 'edit_prescription' prescription.id %}" class="btn btn-outline-warning btn-sm mb-1" title="Editar prescripción">
+                                                    <i class="fas fa-edit"></i> Editar
+                                                </a>
+                                                <button type="button" class="btn btn-outline-danger btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#deleteModal"
+                                                        data-id="{{ prescription.id }}"
+                                                        title="Eliminar prescripción">
+                                                    <i class="fas fa-trash"></i> Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Información adicional (restricciones y descripción) -->
+                                {% if prescription.restrictions or prescription.description %}
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="additional-info">
+                                            {% if prescription.restrictions %}
+                                            <div class="restrictions mb-1">
+                                                <i class="fas fa-exclamation-triangle me-1 text-warning"></i>
+                                                <strong>Restricciones:</strong>
+                                                <span class="text-muted">{{ prescription.restrictions|truncatechars:100 }}</span>
+                                            </div>
+                                            {% endif %}
+                                            {% if prescription.description %}
+                                            <div class="description">
+                                                <i class="fas fa-comment-medical me-1 text-info"></i>
+                                                <strong>Notas:</strong>
+                                                <span class="text-muted">{{ prescription.description|truncatechars:100 }}</span>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Estado vacío -->
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-pills text-muted fa-4x mb-3"></i>
+                        <h4 class="text-muted">No hay prescripciones</h4>
+                        <p class="text-muted mb-4">Aún no has registrado ninguna prescripción médica.</p>
+                        <a href="{% url 'create_prescription' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Crear Primera Prescripción
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
-<!-- 🔹 Modal de confirmación de eliminación -->
+<!-- Modal de confirmación de eliminación -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmar eliminación</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
-                ¿Estás seguro de que quieres eliminar esta prescripción?
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning me-2"></i>
+                    <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                </div>
+                <p>¿Estás seguro de que quieres eliminar esta prescripción médica?</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <form id="deleteForm" method="post">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                </button>
+                <form id="deleteForm" method="post" class="d-inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Eliminar
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
 
-{% endblock %}
+<!-- Font Awesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-{% block extra_scripts %}
+<style>
+    .prescription-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    
+    .prescription-card:hover {
+        background-color: #f8f9fa;
+        border-left-color: #007bff;
+    }
+    
+    .medication-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+    }
+    
+    .dosage-info, .frequency-info, .date-info {
+        font-size: 0.9rem;
+    }
+    
+    .additional-info {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .restrictions, .description {
+        margin-bottom: 5px;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .list-group-item {
+        border: none;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .list-group-item:last-child {
+        border-bottom: none;
+    }
+    
+    .btn-group-vertical .btn {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    
+    .badge {
+        border-radius: 8px;
+        font-size: 0.75rem;
+    }
+    
+    .status-info {
+        margin-bottom: 10px;
+    }
+</style>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var deleteModal = document.getElementById('deleteModal');
@@ -115,4 +347,5 @@
         });
     });
 </script>
+
 {% endblock %}

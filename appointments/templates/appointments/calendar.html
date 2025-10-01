@@ -1,35 +1,334 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container mt-4" style="max-width: 900px; margin: 0 auto;">
-    <h3>Calendario de Citas</h3>
-    <div id="calendar"></div>
+<div class="container">
+    <!-- Header con título y botones de acción -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="text-primary mb-1">
+                        <i class="fas fa-calendar-alt me-2"></i>Calendario de Citas
+                    </h2>
+                    <p class="text-muted mb-0">Visualiza y gestiona tus citas médicas</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'appointment_list' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>Vista Lista
+                    </a>
+                    <a href="{% url 'create_appointment' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Nueva Cita
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-2x mb-2"></i>
+                    <h4 id="totalAppointments">0</h4>
+                    <p class="mb-0">Citas Totales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h4 id="todayAppointments">0</h4>
+                    <p class="mb-0">Hoy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-week fa-2x mb-2"></i>
+                    <h4 id="weekAppointments">0</h4>
+                    <p class="mb-0">Esta Semana</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-stethoscope fa-2x mb-2"></i>
+                    <h4 id="specialtiesCount">0</h4>
+                    <p class="mb-0">Especialidades</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendario principal -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt me-2"></i>Vista de Calendario
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-light btn-sm" id="todayBtn">
+                                <i class="fas fa-home me-1"></i>Hoy
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" id="prevBtn">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" id="nextBtn">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="calendar" class="modern-calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda de especialidades -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-palette me-2"></i>Leyenda de Especialidades
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="specialtyLegend">
+                        <!-- Se llenará dinámicamente con JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- Modal Bootstrap para detalles del evento -->
+<!-- Modal mejorado para detalles del evento -->
 <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow">
-      <div class="modal-header text-white" id="modalHeader">
-        <h5 class="modal-title" id="eventModalLabel"></h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body bg-white">
-        <p><strong>Fecha:</strong> <span id="modalDate"></span></p>
-        <p><strong>Hora:</strong> <span id="modalTime"></span></p>
-        <p><strong>Dirección:</strong> <span id="modalAddress"></span></p>
-      </div>
-      <div class="modal-footer bg-white">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        <a id="deleteButton" class="btn btn-danger">Eliminar</a>
-      </div>
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header text-white" id="modalHeader" style="border-radius: 12px 12px 0 0;">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar-check me-2"></i>
+                    <h5 class="modal-title mb-0" id="eventModalLabel"></h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-calendar text-primary me-3"></i>
+                                <div>
+                                    <strong>Fecha:</strong><br>
+                                    <span id="modalDate" class="text-muted"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock text-success me-3"></i>
+                                <div>
+                                    <strong>Hora:</strong><br>
+                                    <span id="modalTime" class="text-muted"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt text-danger me-3"></i>
+                                <div>
+                                    <strong>Dirección:</strong><br>
+                                    <span id="modalAddress" class="text-muted"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-item mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-user-md text-warning me-3"></i>
+                                <div>
+                                    <strong>Doctor:</strong><br>
+                                    <span id="modalDoctor" class="text-muted"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="modalDescription" style="display: none;">
+                    <div class="col-12">
+                        <div class="info-item">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-comment text-info me-3 mt-1"></i>
+                                <div>
+                                    <strong>Descripción:</strong><br>
+                                    <span id="modalDescText" class="text-muted"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light" style="border-radius: 0 0 12px 12px;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cerrar
+                </button>
+                <a id="editButton" class="btn btn-warning">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </a>
+                <a id="deleteButton" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i>Eliminar
+                </a>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <!-- FullCalendar CSS y JS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+
+<!-- Font Awesome para iconos -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+    .modern-calendar {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    .fc {
+        font-size: 14px;
+    }
+    
+    .fc-toolbar {
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .fc-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 8px 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .fc-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .fc-button:focus {
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .fc-daygrid-day {
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .fc-daygrid-day:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .fc-daygrid-day-number {
+        font-weight: 600;
+        color: #495057;
+        padding: 8px;
+    }
+    
+    .fc-day-today {
+        background-color: #e3f2fd !important;
+    }
+    
+    .fc-day-today .fc-daygrid-day-number {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 4px;
+    }
+    
+    .fc-event {
+        border: none;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 500;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .fc-event:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .fc-event-title {
+        font-weight: 600;
+    }
+    
+    .fc-daygrid-event {
+        margin: 2px 0;
+    }
+    
+    .info-item {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .specialty-legend-item {
+        display: inline-block;
+        margin: 5px 10px 5px 0;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    }
+    
+    .bg-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+</style>
 
 <script>
     const specialtyColors = {
@@ -60,45 +359,153 @@
         'Medicina del deporte': '#D35400'
     };
 
+    let calendar;
+    let eventsData = [];
+
     document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        height: 'auto',
-        events: JSON.parse('{{ events_json|escapejs }}'),
-        locale: 'es',
-        eventClick: function(info) {
-            const specialty = info.event.title;
-            const header = document.getElementById('modalHeader');
-            const title = document.getElementById('eventModalLabel');
-
-            title.textContent = specialty;
-
-            // Asegurarnos de que el color se aplique correctamente al encabezado
-            const eventColor = info.event.extendedProps.color || '#7f7f7f'; // Leer el color desde extendedProps
-            header.style.backgroundColor = eventColor;  // Asignamos el color al encabezado del modal
-
-            // Rellenamos el contenido del modal
-            document.getElementById('modalDate').textContent = info.event.start.toLocaleDateString();
-            document.getElementById('modalTime').textContent = info.event.extendedProps.time;
-            document.getElementById('modalAddress').textContent = info.event.extendedProps.address;
-
-            const deleteButton = document.getElementById('deleteButton');
-            deleteButton.href = `/appointments/${info.event.id}/delete`;
-            // Mostrar el modal
-            new bootstrap.Modal(document.getElementById('eventModal')).show();
-        },
-        // ➡️ Aquí agregamos la redirección cuando haces clic en un día vacío
-        dateClick: function(info) {
-            // info.dateStr viene como 'YYYY-MM-DD'
-            const [year, month, day] = info.dateStr.split('-');
-            const formattedDate = `${day}-${month}-${year}`; // Formato DD-MM-YYYY
-
-            window.location.href = `/appointments/create/?date=${formattedDate}`;
-        }
+        const calendarEl = document.getElementById('calendar');
+        eventsData = JSON.parse('{{ events_json|escapejs }}');
+        
+        // Calcular estadísticas
+        updateStatistics();
+        createSpecialtyLegend();
+        
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            height: 'auto',
+            events: eventsData,
+            locale: 'es',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,dayGridWeek,listWeek'
+            },
+            buttonText: {
+                today: 'Hoy',
+                month: 'Mes',
+                week: 'Semana',
+                list: 'Lista'
+            },
+            eventClick: function(info) {
+                showEventModal(info);
+            },
+            dateClick: function(info) {
+                const [year, month, day] = info.dateStr.split('-');
+                const formattedDate = `${day}-${month}-${year}`;
+                window.location.href = `/appointments/create/?date=${formattedDate}`;
+            },
+            eventDidMount: function(info) {
+                // Aplicar colores personalizados
+                const specialty = info.event.title;
+                const color = specialtyColors[specialty] || '#7f7f7f';
+                info.el.style.backgroundColor = color;
+                info.el.style.borderColor = color;
+            }
+        });
+        
+        calendar.render();
+        
+        // Botones de navegación
+        document.getElementById('todayBtn').addEventListener('click', function() {
+            calendar.today();
+        });
+        
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            calendar.prev();
+        });
+        
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            calendar.next();
+        });
     });
-    calendar.render();
-});
 
+    function updateStatistics() {
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        
+        let todayCount = 0;
+        let weekCount = 0;
+        const specialties = new Set();
+        
+        eventsData.forEach(event => {
+            const eventDate = new Date(event.start);
+            
+            // Contar citas de hoy
+            if (eventDate.toDateString() === today.toDateString()) {
+                todayCount++;
+            }
+            
+            // Contar citas de esta semana
+            if (eventDate >= startOfWeek && eventDate <= endOfWeek) {
+                weekCount++;
+            }
+            
+            // Contar especialidades únicas
+            specialties.add(event.title);
+        });
+        
+        document.getElementById('totalAppointments').textContent = eventsData.length;
+        document.getElementById('todayAppointments').textContent = todayCount;
+        document.getElementById('weekAppointments').textContent = weekCount;
+        document.getElementById('specialtiesCount').textContent = specialties.size;
+    }
+
+    function createSpecialtyLegend() {
+        const legendContainer = document.getElementById('specialtyLegend');
+        const usedSpecialties = new Set();
+        
+        eventsData.forEach(event => {
+            usedSpecialties.add(event.title);
+        });
+        
+        usedSpecialties.forEach(specialty => {
+            const color = specialtyColors[specialty] || '#7f7f7f';
+            const legendItem = document.createElement('div');
+            legendItem.className = 'specialty-legend-item';
+            legendItem.style.backgroundColor = color;
+            legendItem.textContent = specialty;
+            legendContainer.appendChild(legendItem);
+        });
+    }
+
+    function showEventModal(info) {
+        const specialty = info.event.title;
+        const header = document.getElementById('modalHeader');
+        const title = document.getElementById('eventModalLabel');
+        
+        title.textContent = specialty;
+        
+        const eventColor = info.event.extendedProps.color || specialtyColors[specialty] || '#7f7f7f';
+        header.style.backgroundColor = eventColor;
+        
+        // Llenar información del modal
+        document.getElementById('modalDate').textContent = info.event.start.toLocaleDateString('es-ES');
+        document.getElementById('modalTime').textContent = info.event.extendedProps.time;
+        document.getElementById('modalAddress').textContent = info.event.extendedProps.address;
+        document.getElementById('modalDoctor').textContent = info.event.extendedProps.doctor_name || 'No especificado';
+        
+        // Mostrar descripción si existe
+        const description = info.event.extendedProps.description;
+        const descContainer = document.getElementById('modalDescription');
+        const descText = document.getElementById('modalDescText');
+        
+        if (description && description.trim()) {
+            descText.textContent = description;
+            descContainer.style.display = 'block';
+        } else {
+            descContainer.style.display = 'none';
+        }
+        
+        // Configurar botones de acción
+        document.getElementById('editButton').href = `/appointments/${info.event.id}/edit`;
+        document.getElementById('deleteButton').href = `/appointments/${info.event.id}/delete`;
+        
+        // Mostrar el modal
+        new bootstrap.Modal(document.getElementById('eventModal')).show();
+    }
 </script>
+
 {% endblock %}
