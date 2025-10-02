@@ -83,3 +83,26 @@ class Appointment(models.Model):
         ]
         ordering = ["date", "time"]
 
+class UserNotificationPreference(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    email_enabled = models.BooleanField(default=True)
+    in_app_enabled = models.BooleanField(default=True)
+    sms_enabled = models.BooleanField(default=False)  # futuro
+
+    # offsets en minutos (ej. 1440 = 24h, 60 = 1h)
+    offsets_minutes = models.JSONField(default=list, blank=True)
+
+    def __str__(self):
+        return f"NotificationPref({self.user})"
+
+class NotificationLog(models.Model):
+    CHANNELS = (
+        ("email", "Email"),
+        ("in_app", "In-App"),
+        ("sms", "SMS"),
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    appointment = models.ForeignKey('Appointment', on_delete=models.CASCADE)
+    channel = models.CharField(max_length=20, choices=CHANNELS)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

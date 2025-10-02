@@ -1,0 +1,10 @@
+Hello {{ user.first_name|default:user.username }},
+
+This is a friendly reminder of your appointment:
+- Title: {{ appointment.title }}
+- Specialty: {{ appointment.specialty }}
+- When: {{ appointment.date }} at {{ appointment.time }}
+- Where: {{ appointment.address }}
+
+Take care,
+Preventix

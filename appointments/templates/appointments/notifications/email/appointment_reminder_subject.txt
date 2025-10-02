@@ -1,0 +1,1 @@
+Reminder: {{ appointment.title }} on {{ appointment.date }} at {{ appointment.time }}
